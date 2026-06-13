@@ -1,9 +1,12 @@
 """Driver de terminal de pago por puerto serial (COM/TTY).
 
-Soporta comunicación con terminales bancarias mediante protocolos:
-- Genérico (STX/ETX frames)
-- ABM (formato mexicano)
-- ISO8583
+Protocolo implementado:
+- Genérico: frames STX/ETX con comandos pipe-delimitados (CHARGE|amount|currency)
+
+NOTA: Los protocolos ABM e ISO8583 están documentados como opciones en la GUI,
+pero la implementación actual usa el protocolo genérico. Para integrar con
+terminales específicas que requieran ABM o ISO8583 real, se necesita
+implementar el parsing específico del fabricante.
 """
 import logging
 import threading

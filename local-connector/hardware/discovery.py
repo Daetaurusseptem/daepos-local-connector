@@ -1,6 +1,7 @@
 """Auto-detección de hardware conectado al sistema."""
 import logging
 import platform
+import time
 from typing import List, Dict
 
 logger = logging.getLogger("daepoint.discovery")
@@ -260,7 +261,3 @@ def auto_configure_terminal(detected: Dict) -> Dict:
         "currency": "MXN",
     }
     return config
-
-
-# Importar time para usar en _identify_printer
-import time

@@ -411,25 +411,38 @@ class ConnectorApp(ctk.CTk):
             self.printer_result_label.configure(text="No se encontraron impresoras", text_color="gray")
             return
 
-        # Usar la primera detectada
+        # Usar la primera detectada con auto-configure
         p = printers[0]
-        self.printer_conn_var.set(p["connection_type"])
+        try:
+            from hardware.discovery import auto_configure_printer
+            config = auto_configure_printer(p)
+        except Exception:
+            config = {
+                "connection_type": p["connection_type"],
+                "ip_address": p["address"].split(":")[0] if ":" in p["address"] else "192.168.1.100",
+                "port": int(p["address"].split(":")[1]) if ":" in p["address"] else 9100,
+                "serial_port": p["address"],
+                "vendor_id": p["address"].split(":")[0] if ":" in p["address"] else "",
+                "product_id": p["address"].split(":")[1] if ":" in p["address"] else "",
+            }
 
-        if p["connection_type"] == "network":
-            parts = p["address"].split(":")
-            self.printer_ip_entry.delete(0, "end")
-            self.printer_ip_entry.insert(0, parts[0])
-            self.printer_port_entry.delete(0, "end")
-            self.printer_port_entry.insert(0, parts[1] if len(parts) > 1 else "9100")
-        elif p["connection_type"] == "usb":
-            self.printer_usb_entry.delete(0, "end")
-            self.printer_usb_entry.insert(0, p["address"])
-        elif p["connection_type"] == "serial":
-            self.printer_serial_entry.delete(0, "end")
-            self.printer_serial_entry.insert(0, p["address"])
-
+        self.printer_conn_var.set(config.get("connection_type", p["connection_type"]))
+        self.printer_profile_var.set(config.get("model_profile", "generic_escpos"))
         self.printer_enabled_var.set(True)
-        self._on_printer_conn_change(p["connection_type"])
+
+        if config.get("connection_type") == "network":
+            self.printer_ip_entry.delete(0, "end")
+            self.printer_ip_entry.insert(0, config.get("ip_address", "192.168.1.100"))
+            self.printer_port_entry.delete(0, "end")
+            self.printer_port_entry.insert(0, str(config.get("port", 9100)))
+        elif config.get("connection_type") == "usb":
+            self.printer_usb_entry.delete(0, "end")
+            self.printer_usb_entry.insert(0, f"{config.get('vendor_id', '')}:{config.get('product_id', '')}")
+        elif config.get("connection_type") == "serial":
+            self.printer_serial_entry.delete(0, "end")
+            self.printer_serial_entry.insert(0, config.get("serial_port", p["address"]))
+
+        self._on_printer_conn_change(config.get("connection_type", p["connection_type"]))
 
         summary = f"✓ Detectada: {p['model']} ({p['connection_type']}: {p['address']})"
         if len(printers) > 1:
@@ -460,10 +473,19 @@ class ConnectorApp(ctk.CTk):
             return
 
         t = terminals[0]
+        try:
+            from hardware.discovery import auto_configure_terminal
+            config = auto_configure_terminal(t)
+        except Exception:
+            config = {
+                "connection_type": t["connection_type"],
+                "serial_port": t["address"],
+            }
+
         self.terminal_enabled_var.set(True)
-        self.terminal_conn_var.set(t["connection_type"])
+        self.terminal_conn_var.set(config.get("connection_type", t["connection_type"]))
         self.terminal_address_entry.delete(0, "end")
-        self.terminal_address_entry.insert(0, t["address"])
+        self.terminal_address_entry.insert(0, config.get("serial_port", t["address"]))
         self.terminal_result_label.configure(
             text=f"✓ Detectada: {t['model']} ({t['address']})", text_color="green"
         )

@@ -174,7 +174,7 @@ def create_installer():
             nsis_path = p
             break
 
-    if not nsis_path.exists():
+    if nsis_path is None or not nsis_path.exists():
         print("NSIS no encontrado. Instale desde: https://nsis.sourceforge.io/")
         return False
 

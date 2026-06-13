@@ -43,7 +43,7 @@ class PrinterStatus(BaseModel):
 class PrinterConfig(BaseModel):
     """Configuración de impresora térmica."""
     enabled: bool = False
-    connection_type: Literal["usb", "network", "serial", "bluetooth"] = "network"
+    connection_type: Literal["usb", "network", "serial", "bluetooth", "simulator"] = "network"
     model_profile: str = "generic_escpos"
     # Network
     ip_address: str = "192.168.1.100"
@@ -75,7 +75,7 @@ class TerminalStatus(BaseModel):
 class TerminalConfig(BaseModel):
     """Configuración de terminal de pago."""
     enabled: bool = False
-    connection_type: Literal["serial", "network", "smartpos", "clip"] = "serial"
+    connection_type: Literal["serial", "network", "smartpos", "clip", "simulator"] = "serial"
     # Serial
     serial_port: str = "COM4"
     baud_rate: int = 9600

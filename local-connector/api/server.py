@@ -177,7 +177,16 @@ def print_receipt(request: PrintRequest):
         raise HTTPException(503, "Impresora no conectada")
 
     try:
-        printer_driver.print_receipt(request.content)
+        from config.settings import PrintOptions
+        options = PrintOptions(
+            auto_cut=request.auto_cut,
+            open_drawer=request.open_drawer,
+        )
+        printer_driver.print_receipt(request.content, options=options)
+
+        if request.open_drawer:
+            printer_driver.open_drawer()
+
         return {"status": "success", "message": "Ticket impreso"}
     except Exception as e:
         logger.error(f"Error imprimiendo: {e}")
