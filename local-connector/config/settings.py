@@ -20,6 +20,16 @@ class PrinterCapabilities(BaseModel):
     supports_full_cut: bool = False
 
 
+class PrintOptions(BaseModel):
+    """Opciones de impresión."""
+    bold: bool = False
+    align: str = "left"
+    double_width: bool = False
+    double_height: bool = False
+    auto_cut: bool = True
+    open_drawer: bool = False
+
+
 class PrinterStatus(BaseModel):
     """Estado actual de la impresora."""
     connected: bool = False
