@@ -87,21 +87,21 @@ jobs:
           7z a -tzip dist/DaePointConnector-${{ steps.version.outputs.version }}-portable.zip dist/DaePointConnector/
 
       - name: Upload artifact - Portable EXE
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: DaePointConnector-${{ steps.version.outputs.version }}-portable
           path: local-connector/dist/DaePointConnector/DaePointConnector.exe
           retention-days: 30
 
       - name: Upload artifact - Portable ZIP
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: DaePointConnector-${{ steps.version.outputs.version }}-portable-zip
           path: local-connector/dist/DaePointConnector-*.zip
           retention-days: 30
 
       - name: Upload artifact - Installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: DaePointConnector-${{ steps.version.outputs.version }}-installer
           path: local-connector/DaePointConnector-Setup.exe
