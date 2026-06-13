@@ -1,0 +1,7 @@
+SKU_Codigo,Nombre,Marca,Categoria,Precio_Compra,Precio_Venta,Stock_Actual,Unidad_Medida
+7501055300075,Coca Cola Original 600ml,Coca Cola,Bebidas,12.50,18.00,24,unit
+7501011167340,Sabritas Sal 45g,Sabritas,Snacks,11.00,16.50,15,unit
+7501032912345,Leche Entera 1L,Lala,Lacteos,19.00,24.50,12,l
+8001234567890,Pasta Penne 500g,Barilla,Abarrotes,15.00,22.00,10,unit
+7509876543210,Detergente Multiusos 1kg,Foca,Limpieza,28.00,35.00,8,kg
+1234567890123,Producto de Prueba Nuevo,DaePoint,Prueba AI,5.00,10.00,100,unit

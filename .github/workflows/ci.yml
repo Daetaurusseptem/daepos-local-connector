@@ -1,0 +1,108 @@
+# CI Workflow - Build & Test on Push/PR
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r local-connector/requirements.txt
+          pip install ruff black
+
+      - name: Ruff lint
+        run: ruff check local-connector/ --output-format=github
+        continue-on-error: true
+
+      - name: Black format check
+        run: black --check local-connector/
+        continue-on-error: true
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed for git describe
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          cd local-connector
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Install NSIS
+        run: choco install nsis -y
+
+      - name: Get version from git
+        id: version
+        shell: bash
+        run: |
+          cd local-connector
+          VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "2.0.0-dev")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Build executable
+        run: |
+          cd local-connector
+          python packaging/build.py
+
+      - name: Create installer
+        run: |
+          cd local-connector
+          & "C:\Program Files (x86)\NSIS\makensis.exe" packaging\installer.nsi
+
+      - name: Create portable ZIP
+        shell: bash
+        run: |
+          cd local-connector
+          7z a -tzip dist/DaePointConnector-${{ steps.version.outputs.version }}-portable.zip dist/DaePointConnector/
+
+      - name: Upload artifact - Portable EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: DaePointConnector-${{ steps.version.outputs.version }}-portable
+          path: local-connector/dist/DaePointConnector/DaePointConnector.exe
+          retention-days: 30
+
+      - name: Upload artifact - Portable ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: DaePointConnector-${{ steps.version.outputs.version }}-portable-zip
+          path: local-connector/dist/DaePointConnector-*.zip
+          retention-days: 30
+
+      - name: Upload artifact - Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: DaePointConnector-${{ steps.version.outputs.version }}-installer
+          path: local-connector/DaePointConnector-Setup.exe
+          retention-days: 30

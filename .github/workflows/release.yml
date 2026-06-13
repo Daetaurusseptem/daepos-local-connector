@@ -1,0 +1,137 @@
+# Release Workflow - Build & publish on tag push
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write  # Required for creating releases
+
+jobs:
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          cd local-connector
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Install NSIS
+        run: choco install nsis -y
+
+      - name: Extract version from tag
+        id: version
+        shell: bash
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION (tag: $TAG)"
+
+      - name: Build executable
+        run: |
+          cd local-connector
+          python packaging/build.py
+
+      - name: Create installer
+        run: |
+          cd local-connector
+          & "C:\Program Files (x86)\NSIS\makensis.exe" packaging\installer.nsi
+
+      - name: Create portable ZIP
+        shell: bash
+        run: |
+          cd local-connector
+          7z a -tzip dist/DaePointConnector-${{ steps.version.outputs.version }}-win64.zip dist/DaePointConnector/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            local-connector/dist/DaePointConnector/DaePointConnector.exe
+            local-connector/dist/DaePointConnector-*-win64.zip
+            local-connector/DaePointConnector-Setup.exe
+          retention-days: 5
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-windows
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: artifacts
+
+      - name: Generate changelog
+        id: changelog
+        shell: bash
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -n "$PREV_TAG" ]; then
+            echo "### Cambios desde $PREV_TAG" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges >> CHANGELOG.md
+          else
+            echo "### Primer release" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" --no-merges -20 >> CHANGELOG.md
+          fi
+          
+          echo "" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "---" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Archivos incluidos" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "- **DaePointConnector.exe** - Ejecutable portable (doble clic)" >> CHANGELOG.md
+          echo "- **DaePointConnector-win64.zip** - ZIP portable" >> CHANGELOG.md
+          echo "- **DaePointConnector-Setup.exe** - Instalador con accesos directos" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Instalación" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo '```' >> CHANGELOG.md
+          echo "# Opción 1: Ejecutable portable" >> CHANGELOG.md
+          echo "Descargar DaePointConnector.exe y ejecutar." >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "# Opción 2: Instalador" >> CHANGELOG.md
+          echo "Descargar DaePointConnector-Setup.exe y seguir el wizard." >> CHANGELOG.md
+          echo '```' >> CHANGELOG.md
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "DaePoint Local Connector ${{ github.ref_name }}"
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+          files: |
+            artifacts/DaePointConnector.exe
+            artifacts/DaePointConnector-*-win64.zip
+            artifacts/DaePointConnector-Setup.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
