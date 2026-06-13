@@ -1,7 +1,0 @@
-# Reglas para Agentes de IA
-
-Cualquier agente de IA que trabaje en esta codebase DEBE apegarse a la siguiente regla estricta:
-
-1. **PRUEBAS DE INTEGRACIÓN OBLIGATORIAS:** Para cualquier nueva funcionalidad, refactorización o corrección de errores significativa, el agente DEBE requerir, escribir y ejecutar pruebas de integración y/o pruebas E2E (Playwright). No se debe dar por finalizada la tarea hasta que las pruebas correspondientes pasen exitosamente y cubran los casos de uso críticos (Happy Paths y Edge Cases).
-2. **Entorno Seguro:** Las pruebas automatizadas que muten la base de datos deben procurar ejecutarse en un entorno limpio y determinista (usando el `seed` pertinente).
-3. **Mantenibilidad:** El código generado debe seguir las reglas de formato existentes (ESLint y Prettier configurados en el proyecto).

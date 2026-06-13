@@ -1,4 +1,15 @@
-# DaePoint POS - .gitignore
+# DaePoint Local Connector - .gitignore
+
+# Parent POS project files (not part of this repo)
+.cursorrules
+CREDENTIALS.md
+docker-compose.yml
+render-build.sh
+test_productos.csv
+
+# Separated repos (NOT monorepo)
+backend/
+frontend/
 
 # Python
 __pycache__/
@@ -6,9 +17,6 @@ __pycache__/
 *$py.class
 *.so
 *.egg-info/
-dist/
-build/
-eggs/
 *.egg
 *.whl
 
@@ -18,7 +26,7 @@ venv/
 .venv/
 env/
 
-# PyInstaller
+# PyInstaller build artifacts
 local-connector/build/
 local-connector/dist/
 *.spec.bak
@@ -39,10 +47,6 @@ desktop.ini
 *.log
 error_log.txt
 
-# Separated repos (NOT monorepo)
-backend/
-frontend/
-
 # Node.js
 node_modules/
 dist/
@@ -55,7 +59,3 @@ dist/
 # Test artifacts
 test-results/
 playwright-report/
-
-# Build artifacts (keep for reference)
-local-connector/build/
-local-connector/dist/
