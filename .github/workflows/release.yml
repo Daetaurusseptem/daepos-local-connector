@@ -60,7 +60,7 @@ jobs:
           7z a -tzip dist/DaePointConnector-${{ steps.version.outputs.version }}-win64.zip dist/DaePointConnector/
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-artifacts
           path: |
